@@ -5,6 +5,7 @@ import {
   Copy,
   ExternalLink,
   History,
+  LayoutDashboard,
   Loader2,
   LogOut,
   MessageCircle,
@@ -282,6 +283,9 @@ function Index() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="border-header-foreground/30 bg-transparent text-header-foreground hover:bg-header-foreground/10 hover:text-header-foreground">
+              <Link to="/dashboard"><LayoutDashboard className="h-4 w-4" /> Dashboard</Link>
+            </Button>
             <Button asChild variant="outline" size="sm" className="border-header-foreground/30 bg-transparent text-header-foreground hover:bg-header-foreground/10 hover:text-header-foreground">
               <Link to="/leads"><UserPlus className="h-4 w-4" /> Leads</Link>
             </Button>
