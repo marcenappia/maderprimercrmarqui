@@ -5,6 +5,7 @@ import {
   Copy,
   ExternalLink,
   History,
+  Handshake,
   LayoutDashboard,
   Loader2,
   LogOut,
@@ -288,6 +289,9 @@ function Index() {
             </Button>
             <Button asChild variant="outline" size="sm" className="border-header-foreground/30 bg-transparent text-header-foreground hover:bg-header-foreground/10 hover:text-header-foreground">
               <Link to="/leads"><UserPlus className="h-4 w-4" /> Leads</Link>
+            </Button>
+            <Button asChild variant="outline" size="sm" className="border-header-foreground/30 bg-transparent text-header-foreground hover:bg-header-foreground/10 hover:text-header-foreground">
+              <Link to="/parceiros"><Handshake className="h-4 w-4" /> Parceiros</Link>
             </Button>
             <Button variant="outline" size="sm" onClick={resetAll} className="border-header-foreground/30 bg-transparent text-header-foreground hover:bg-header-foreground/10 hover:text-header-foreground">
               <RotateCcw className="h-4 w-4" /> Zerar status
