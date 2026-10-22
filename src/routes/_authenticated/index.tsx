@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Copy,
   ExternalLink,
+  History,
   Loader2,
   LogOut,
   MessageCircle,
@@ -412,6 +413,11 @@ function Index() {
                           )}
                           <Button size="sm" variant="outline" onClick={() => openModal(p)}>
                             Mensagens
+                          </Button>
+                          <Button asChild size="sm" variant="outline" aria-label={`Histórico de ${p.name}`}>
+                            <Link to="/prospects/$id" params={{ id: String(p.id) }}>
+                              <History className="h-4 w-4" /> Histórico
+                            </Link>
                           </Button>
                         </div>
                       </td>
