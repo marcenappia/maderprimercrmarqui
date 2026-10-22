@@ -60,3 +60,64 @@ export const generateApproach = createServerFn({ method: "POST" })
       return { error: "Não foi possível gerar a mensagem agora." };
     }
   });
+
+type ReplyInput = { prospectId: number; reply: string; context: string };
+
+export const generateReply = createServerFn({ method: "POST" })
+  .inputValidator((input: ReplyInput) => {
+    if (!Number.isInteger(input?.prospectId)) throw new Error("Escritório inválido");
+    const reply = String(input.reply ?? "").trim();
+    if (reply.length < 3 || reply.length > 2000) throw new Error("A resposta recebida deve ter entre 3 e 2000 caracteres");
+    const context = String(input.context ?? "").trim().slice(0, 1500);
+    return { prospectId: input.prospectId, reply, context };
+  })
+  .handler(async ({ data }): Promise<{ message?: string; error?: string }> => {
+    const p = initialProspects.find((x) => x.id === data.prospectId);
+    if (!p) return { error: "Escritório não encontrado." };
+    const apiKey = process.env['LOVABLE_API_KEY'];
+    if (!apiKey) return { error: "IA não configurada." };
+
+    const { createOpenAI } = await import("@ai-sdk/openai");
+    const { streamText } = await import("ai");
+    const { createLovableAiGatewayRunIdFetch } = await import("./run-id");
+    const provider = createOpenAI({
+      baseURL: "https://ai.gateway.lovable.dev/v1",
+      apiKey,
+      headers: { "Lovable-API-Key": apiKey, "X-Lovable-AIG-SDK": "vercel-ai-sdk" },
+      fetch: createLovableAiGatewayRunIdFetch().fetch,
+    });
+
+    try {
+      const result = streamText({
+        model: provider.responses("openai/gpt-6-astra"),
+        instructions:
+          "Você é Evaldo, da MadePrimer, marcenaria de móveis planejados e sob medida. Escreva UMA resposta para WhatsApp, em português do Brasil, tom profissional e cordial, até 90 palavras, sem emojis, sem markdown. Responda ao que o escritório escreveu, avance a conversa (proponha próximo passo: reunião, visita, envio de portfólio) e termine com uma pergunta simples. Responda apenas com o texto da mensagem.",
+        messages: [
+          {
+            role: "user",
+            content: `Escritório: ${p.name}\nFoco/região: ${p.focus}\nCanal: ${p.channel}\n\nResposta recebida do escritório:\n${data.reply}\n\nContexto da conversa:\n${data.context || "(sem contexto adicional)"}`,
+          },
+        ],
+        maxRetries: 0,
+        providerOptions: {
+          openai: {
+            forceReasoning: true,
+            reasoningEffort: "low",
+            reasoningSummary: "auto",
+            store: false,
+            include: ["reasoning.encrypted_content"],
+          },
+        },
+      });
+      const text = (await result.text).trim();
+      if (!text) return { error: "A IA não retornou uma resposta. Tente de novo." };
+      return { message: text };
+    } catch (e) {
+      const status = (e as { statusCode?: number }).statusCode;
+      console.error("AI reply failed", status, e);
+      if (status === 429) return { error: "Muitas solicitações. Aguarde um instante e tente de novo." };
+      if (status === 402) return { error: "Créditos de IA esgotados. Adicione créditos no workspace." };
+      if (status === 403) return { error: "Acesso à IA bloqueado para este workspace." };
+      return { error: "Não foi possível gerar a resposta agora." };
+    }
+  });
