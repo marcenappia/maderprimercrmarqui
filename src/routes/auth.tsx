@@ -41,14 +41,20 @@ function AuthPage() {
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getUser()
+    // Start from a resolved promise so synchronous client-initialization errors
+    // are caught too (the Supabase proxy can throw before getUser() returns).
+    Promise.resolve()
+      .then(() => supabase.auth.getUser())
       .then(({ data, error }) => {
         if (mounted && !error && data.user) navigate({ to: safeRedirect(redirect), replace: true });
         if (error) console.error("[Auth] Could not restore session:", error);
       })
       .catch((error: unknown) => {
-        // Keep the sign-in screen visible if the auth service is temporarily unavailable.
+        // Keep the sign-in screen visible if auth is misconfigured or unavailable.
         console.error("[Auth] Session restore failed:", error);
+        if (mounted) {
+          toast.error("O serviço de autenticação não está configurado ou está indisponível. Avise o administrador.");
+        }
       });
     return () => { mounted = false; };
   }, [navigate, redirect]);
