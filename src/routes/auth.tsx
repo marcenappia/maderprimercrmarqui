@@ -40,9 +40,17 @@ function AuthPage() {
   const [checkEmail, setCheckEmail] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      if (data.user) navigate({ to: safeRedirect(redirect), replace: true });
-    });
+    let mounted = true;
+    supabase.auth.getUser()
+      .then(({ data, error }) => {
+        if (mounted && !error && data.user) navigate({ to: safeRedirect(redirect), replace: true });
+        if (error) console.error("[Auth] Could not restore session:", error);
+      })
+      .catch((error: unknown) => {
+        // Keep the sign-in screen visible if the auth service is temporarily unavailable.
+        console.error("[Auth] Session restore failed:", error);
+      });
+    return () => { mounted = false; };
   }, [navigate, redirect]);
 
   const afterAuth = () => navigate({ to: safeRedirect(redirect), replace: true });
@@ -69,6 +77,9 @@ function AuthPage() {
           afterAuth();
         }
       }
+    } catch (error) {
+      console.error("[Auth] Sign-in request failed:", error);
+      toast.error("Não foi possível conectar ao serviço de autenticação. Tente novamente em instantes.");
     } finally {
       setLoading(false);
     }
