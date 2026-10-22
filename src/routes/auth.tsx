@@ -12,9 +12,10 @@ import logoUrl from "@/assets/madeprimer_logo.png";
 type AuthSearch = { redirect?: string };
 
 export const Route = createFileRoute("/auth")({
-  validateSearch: (search: Record<string, unknown>): AuthSearch => ({
-    redirect: typeof search.redirect === "string" ? search.redirect : undefined,
-  }),
+  validateSearch: (search: Record<string, unknown>): AuthSearch => {
+    const r = search["redirect"];
+    return typeof r === "string" ? { redirect: r } : {};
+  },
   head: () => ({
     meta: [
       { title: "Entrar — MadePrimer CRM" },

@@ -58,8 +58,8 @@ const STATUSES: { value: Status; label: string; dot: string; chip: string }[] = 
   { value: "A Enviar", label: "A Enviar", dot: "bg-slate-400", chip: "bg-slate-100 text-slate-700" },
   { value: "WhatsApp Aberto", label: "WhatsApp Aberto", dot: "bg-sky-500", chip: "bg-sky-100 text-sky-800" },
   { value: "Mensagem Enviada", label: "Mensagem Enviada", dot: "bg-blue-500", chip: "bg-blue-100 text-blue-800" },
-  { value: "Follow-up Enviado", label: "Follow-up Enviado", dot: "bg-violet-500", chip: "bg-violet-100 text-violet-800" },
-  { value: "Respondeu", label: "Respondeu", dot: "bg-emerald-500", chip: "bg-emerald-100 text-emerald-800" },
+  { value: "Em Conversa", label: "Em Conversa", dot: "bg-violet-500", chip: "bg-violet-100 text-violet-800" },
+  { value: "Reunião Agendada", label: "Reunião Agendada", dot: "bg-emerald-500", chip: "bg-emerald-100 text-emerald-800" },
   { value: "Sem Interesse", label: "Sem Interesse", dot: "bg-rose-500", chip: "bg-rose-100 text-rose-800" },
 ];
 
@@ -203,7 +203,7 @@ function Index() {
   };
 
   const openWhatsApp = (p: Prospect, msg: string) => {
-    window.open(waUrl(p.phone, msg), "_blank", "noopener");
+    window.open(waUrl(p.phoneRaw, msg), "_blank", "noopener");
     if (statusOf(p.id) === "A Enviar") setStatus(p.id, "WhatsApp Aberto");
   };
 
@@ -399,7 +399,7 @@ function Index() {
                       <Copy className="h-4 w-4" /> Copiar
                     </Button>
                     {isWhats(modal) && (
-                      <Button onClick={() => { openWhatsApp(modal, followUp); setStatus(modal.id, "Follow-up Enviado"); }}>
+                      <Button onClick={() => { openWhatsApp(modal, followUp); setStatus(modal.id, "Em Conversa"); }}>
                         <ExternalLink className="h-4 w-4" /> Disparar WhatsApp
                       </Button>
                     )}
