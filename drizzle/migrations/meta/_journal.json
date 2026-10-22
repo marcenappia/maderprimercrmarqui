@@ -22,6 +22,13 @@
       "when": 1792635401229,
       "tag": "0002_create_prospect_interactions",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1792636000000,
+      "tag": "0003_partner_crm",
+      "breakpoints": true
     }
   ]
 }
