@@ -199,7 +199,7 @@ function Index() {
   const openModal = (p: Prospect) => {
     setModal(p);
     setDraft(p.message);
-    setFollowUp(followUpTemplate(p.name));
+    setFollowUp(followUpTemplate);
   };
 
   const openWhatsApp = (p: Prospect, msg: string) => {
