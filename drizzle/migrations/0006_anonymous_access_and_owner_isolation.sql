@@ -34,14 +34,12 @@ CREATE POLICY prospect_statuses_owner_select ON public.prospect_statuses
 CREATE POLICY prospect_statuses_owner_insert ON public.prospect_statuses
   FOR INSERT TO authenticated WITH CHECK (
     EXISTS (SELECT 1 FROM public.prospects p WHERE p.id = prospect_id AND p.created_by = auth.uid())
-    AND updated_by = auth.uid()
   );
 CREATE POLICY prospect_statuses_owner_update ON public.prospect_statuses
   FOR UPDATE TO authenticated USING (
     EXISTS (SELECT 1 FROM public.prospects p WHERE p.id = prospect_id AND p.created_by = auth.uid())
   ) WITH CHECK (
     EXISTS (SELECT 1 FROM public.prospects p WHERE p.id = prospect_id AND p.created_by = auth.uid())
-    AND updated_by = auth.uid()
   );
 CREATE POLICY prospect_statuses_owner_delete ON public.prospect_statuses
   FOR DELETE TO authenticated USING (
