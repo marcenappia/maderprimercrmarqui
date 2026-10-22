@@ -15,6 +15,7 @@ import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedDashboardRouteImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedLeadsRouteImport } from './routes/_authenticated/leads'
 import { Route as AuthenticatedProspectsIdRouteImport } from './routes/_authenticated/prospects.$id'
+import { Route as AuthenticatedParceirosRouteImport } from './routes/_authenticated/parceiros'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -46,6 +47,11 @@ const AuthenticatedProspectsIdRoute =
     path: '/prospects/$id',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedParceirosRoute = AuthenticatedParceirosRouteImport.update({
+  id: '/parceiros',
+  path: '/parceiros',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -53,6 +59,7 @@ export interface FileRoutesByFullPath {
   '/dashboard': typeof AuthenticatedDashboardRoute
   '/leads': typeof AuthenticatedLeadsRoute
   '/prospects/$id': typeof AuthenticatedProspectsIdRoute
+  '/parceiros': typeof AuthenticatedParceirosRoute
 }
 export interface FileRoutesByTo {
   '/auth': typeof AuthRoute
@@ -60,6 +67,7 @@ export interface FileRoutesByTo {
   '/leads': typeof AuthenticatedLeadsRoute
   '/': typeof AuthenticatedIndexRoute
   '/prospects/$id': typeof AuthenticatedProspectsIdRoute
+  '/parceiros': typeof AuthenticatedParceirosRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -69,10 +77,11 @@ export interface FileRoutesById {
   '/_authenticated/leads': typeof AuthenticatedLeadsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/_authenticated/prospects/$id': typeof AuthenticatedProspectsIdRoute
+  '/_authenticated/parceiros': typeof AuthenticatedParceirosRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/auth' | '/dashboard' | '/leads' | '/prospects/$id'
+  fullPaths: '/' | '/auth' | '/dashboard' | '/leads' | '/prospects/$id' | '/parceiros'
   fileRoutesByTo: FileRoutesByTo
   to: '/auth' | '/dashboard' | '/leads' | '/' | '/prospects/$id'
   id:
@@ -83,6 +92,7 @@ export interface FileRouteTypes {
     | '/_authenticated/leads'
     | '/_authenticated/'
     | '/_authenticated/prospects/$id'
+    | '/_authenticated/parceiros'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -134,6 +144,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedProspectsIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/parceiros': {
+      id: '/_authenticated/parceiros'
+      path: '/parceiros'
+      fullPath: '/parceiros'
+      preLoaderRoute: typeof AuthenticatedParceirosRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -142,6 +159,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedLeadsRoute: typeof AuthenticatedLeadsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedProspectsIdRoute: typeof AuthenticatedProspectsIdRoute
+  AuthenticatedParceirosRoute: typeof AuthenticatedParceirosRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -149,6 +167,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedLeadsRoute: AuthenticatedLeadsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedProspectsIdRoute: AuthenticatedProspectsIdRoute,
+  AuthenticatedParceirosRoute: AuthenticatedParceirosRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
