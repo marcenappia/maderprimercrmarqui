@@ -13,7 +13,7 @@ export const generateApproach = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<{ message?: string; error?: string }> => {
     const p = initialProspects.find((x) => x.id === data.prospectId);
     if (!p) return { error: "Escritório não encontrado." };
-    const apiKey = process.env.LOVABLE_API_KEY;
+    const apiKey = process.env['LOVABLE_API_KEY'];
     if (!apiKey) return { error: "IA não configurada." };
 
     const { createOpenAI } = await import("@ai-sdk/openai");

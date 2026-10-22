@@ -317,8 +317,8 @@ function AiGenerator({ prospects, onOpened }: { prospects: Prospect[]; onOpened:
   const p = prospects.find((x) => x.id === id);
 
   const run = async () => {
-    if (!p) return toast.error("Selecione um escritório.");
-    if (context.trim().length < 3) return toast.error("Descreva o contexto do contato.");
+    if (!p) { toast.error("Selecione um escritório."); return; }
+    if (context.trim().length < 3) { toast.error("Descreva o contexto do contato."); return; }
     setLoading(true);
     try {
       const res = await generate({ data: { prospectId: p.id, context } });
