@@ -35,6 +35,48 @@ export type Database = {
         }
         Relationships: []
       }
+      prospects: {
+        Row: {
+          channel: string
+          created_at: string
+          created_by: string | null
+          email: string
+          focus: string
+          id: number
+          name: string
+          notes: string
+          phone: string
+          priority: string
+          source: string
+        }
+        Insert: {
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          focus?: string
+          id?: never
+          name: string
+          notes?: string
+          phone?: string
+          priority?: string
+          source?: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string
+          created_by?: string | null
+          email?: string
+          focus?: string
+          id?: never
+          name?: string
+          notes?: string
+          phone?: string
+          priority?: string
+          source?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
