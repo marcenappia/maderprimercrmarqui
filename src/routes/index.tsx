@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Clock, Copy, Hammer, PenLine, RotateCcw, Search, SearchX, Send } from "lucide-react";
+import { CheckCheck, Clock, Copy, Hammer, Loader2, Sparkles, PenLine, RotateCcw, Search, SearchX, Send } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { followUpTemplate, initialProspects, type Prospect, type Status } from "@/lib/prospects";
 import { cn } from "@/lib/utils";
+import { useServerFn } from "@tanstack/react-start";
+import { generateApproach } from "@/lib/ai/message.functions";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -29,6 +31,7 @@ export const Route = createFileRoute("/")({
 const STORAGE_KEY = "madeprimer_prospects_status";
 const STATUSES: { value: Status; label: string; cls: string }[] = [
   { value: "A Enviar", label: "⏳ A Enviar", cls: "bg-muted text-foreground border-border" },
+  { value: "WhatsApp Aberto", label: "📲 WhatsApp Aberto", cls: "bg-chart-4/15 text-foreground border-chart-4/40" },
   { value: "Mensagem Enviada", label: "🚀 Mensagem Enviada", cls: "bg-success/10 text-success border-success/30" },
   { value: "Em Conversa", label: "💬 Em Conversa", cls: "bg-chart-2/10 text-chart-2 border-chart-2/30" },
   { value: "Reunião Agendada", label: "📅 Reunião Agendada", cls: "bg-primary/10 text-accent-foreground border-primary/30" },
@@ -86,7 +89,7 @@ function Index() {
     );
   }, [prospects, search, priority, statusFilter]);
 
-  const sent = prospects.filter((p) => p.status !== "A Enviar").length;
+  const sent = prospects.filter((p) => p.status !== "A Enviar" && p.status !== "WhatsApp Aberto").length;
   const active = modal ? prospects.find((p) => p.id === modal.id) : undefined;
 
   const openModal = (id: number, tab: "initial" | "followup") => {
@@ -96,7 +99,10 @@ function Index() {
   };
 
   const trackSent = (p: Prospect) => {
-    if (p.status === "A Enviar") setStatus(p.id, "Mensagem Enviada");
+    if (p.status === "A Enviar") {
+      setStatus(p.id, "WhatsApp Aberto");
+      toast("WhatsApp aberto", { description: "Depois de apertar enviar no WhatsApp, clique em \"Marcar enviada\"." });
+    }
   };
 
   const selectCls = "h-9 rounded-lg border border-input bg-background px-3 text-xs focus:outline-none focus:ring-2 focus:ring-ring/50";
@@ -171,6 +177,8 @@ function Index() {
           </div>
         </div>
 
+        <AiGenerator prospects={prospects} onOpened={trackSent} />
+
         <div className="overflow-hidden rounded-2xl border bg-card shadow-sm">
           <div className="overflow-x-auto">
             <table className="w-full border-collapse text-left">
@@ -205,12 +213,18 @@ function Index() {
                       <td className="p-4">
                         <select aria-label={`Status de ${p.name}`} value={p.status} onChange={(e) => setStatus(p.id, e.target.value as Status)}
                           className={cn("cursor-pointer rounded-lg border px-2.5 py-1.5 text-xs font-medium focus:outline-none", st.cls)}>
-                          {STATUSES.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+                          {STATUSES.map((s) => (
+                            <option key={s.value} value={s.value} disabled={s.value === "Mensagem Enviada" && p.status === "A Enviar"}>{s.label}</option>
+                          ))}
                         </select>
                       </td>
                       <td className="p-4">
                         <div className="flex items-center justify-center gap-1.5">
-                          {isWhats(p) ? (
+                          {p.status === "WhatsApp Aberto" ? (
+                            <Button size="sm" className="bg-success text-success-foreground hover:bg-success/90" onClick={() => { setStatus(p.id, "Mensagem Enviada"); toast.success("Marcada como enviada!"); }}>
+                              <CheckCheck className="h-3.5 w-3.5" /> Marcar enviada
+                            </Button>
+                          ) : isWhats(p) ? (
                             <Button asChild size="sm" className="bg-success text-success-foreground hover:bg-success/90">
                               <a href={waUrl(p.phoneRaw, p.message)} target="_blank" rel="noreferrer" onClick={() => trackSent(p)}>
                                 <Send className="h-3.5 w-3.5" /> 1º Contato
@@ -291,5 +305,75 @@ function Index() {
         </DialogContent>
       </Dialog>
     </div>
+  );
+}
+
+function AiGenerator({ prospects, onOpened }: { prospects: Prospect[]; onOpened: (p: Prospect) => void }) {
+  const generate = useServerFn(generateApproach);
+  const [id, setId] = useState<number | "">("");
+  const [context, setContext] = useState("");
+  const [result, setResult] = useState("");
+  const [loading, setLoading] = useState(false);
+  const p = prospects.find((x) => x.id === id);
+
+  const run = async () => {
+    if (!p) return toast.error("Selecione um escritório.");
+    if (context.trim().length < 3) return toast.error("Descreva o contexto do contato.");
+    setLoading(true);
+    try {
+      const res = await generate({ data: { prospectId: p.id, context } });
+      if (res.error) toast.error(res.error);
+      else setResult(res.message ?? "");
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Erro ao gerar mensagem.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <section className="mb-6 rounded-2xl border bg-card p-5 shadow-sm" aria-labelledby="ai-title">
+      <div className="mb-4 flex items-center gap-2">
+        <div className="rounded-lg bg-primary/10 p-2 text-accent-foreground"><Sparkles className="h-5 w-5" aria-hidden /></div>
+        <div>
+          <h2 id="ai-title" className="text-sm font-bold">Gerar abordagem personalizada com IA</h2>
+          <p className="text-xs text-muted-foreground">Escolha o escritório, conte o contexto e a IA escreve a mensagem.</p>
+        </div>
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <div className="space-y-3">
+          <div>
+            <label htmlFor="ai-office" className="mb-1 block text-xs font-semibold text-muted-foreground">Escritório</label>
+            <select id="ai-office" value={id} onChange={(e) => { setId(e.target.value ? Number(e.target.value) : ""); setResult(""); }}
+              className="h-9 w-full rounded-lg border border-input bg-background px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring/50">
+              <option value="">Selecione...</option>
+              {prospects.map((x) => <option key={x.id} value={x.id}>{x.id}. {x.name}</option>)}
+            </select>
+            {p && <p className="mt-1 text-[11px] text-muted-foreground">{p.focus} · {p.channel}</p>}
+          </div>
+          <div>
+            <label htmlFor="ai-context" className="mb-1 block text-xs font-semibold text-muted-foreground">Contexto do contato</label>
+            <Textarea id="ai-context" rows={4} maxLength={1500} value={context} onChange={(e) => setContext(e.target.value)}
+              placeholder="Ex.: vi no Instagram um projeto de cozinha em Alphaville; indicação do arquiteto X; já fizemos obra no mesmo condomínio..." />
+          </div>
+          <Button onClick={run} disabled={loading} className="w-full sm:w-auto">
+            {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+            {loading ? "Gerando..." : "Gerar mensagem"}
+          </Button>
+        </div>
+        <div className="flex flex-col gap-2">
+          <label htmlFor="ai-result" className="text-xs font-semibold text-muted-foreground">Mensagem gerada (editável)</label>
+          <Textarea id="ai-result" rows={8} value={result} onChange={(e) => setResult(e.target.value)} className="flex-1 leading-relaxed" placeholder="A mensagem aparecerá aqui." />
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" size="sm" disabled={!result} onClick={() => copy(result)}><Copy className="h-3.5 w-3.5" /> Copiar</Button>
+            {p && isWhats(p) && result && (
+              <Button asChild size="sm" className="bg-success text-success-foreground hover:bg-success/90">
+                <a href={waUrl(p.phoneRaw, result)} target="_blank" rel="noreferrer" onClick={() => onOpened(p)}><Send className="h-3.5 w-3.5" /> Abrir no WhatsApp</a>
+              </Button>
+            )}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 }

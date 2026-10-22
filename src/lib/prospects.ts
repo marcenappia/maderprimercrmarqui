@@ -1,4 +1,4 @@
-export type Status = "A Enviar" | "Mensagem Enviada" | "Em Conversa" | "Reunião Agendada" | "Sem Interesse";
+export type Status = "A Enviar" | "WhatsApp Aberto" | "Mensagem Enviada" | "Em Conversa" | "Reunião Agendada" | "Sem Interesse";
 export type Priority = "P1" | "P2" | "P3";
 export interface Prospect {
   id: number;
