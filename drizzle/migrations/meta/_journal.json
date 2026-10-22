@@ -15,6 +15,13 @@
       "when": 1792635114310,
       "tag": "0001_create_prospects_leads",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1792635401229,
+      "tag": "0002_create_prospect_interactions",
+      "breakpoints": true
     }
   ]
 }

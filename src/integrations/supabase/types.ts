@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      prospect_interactions: {
+        Row: {
+          content: string
+          created_at: string
+          created_by: string | null
+          direction: string
+          id: number
+          prospect_id: number
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          created_by?: string | null
+          direction?: string
+          id?: never
+          prospect_id: number
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          direction?: string
+          id?: never
+          prospect_id?: number
+        }
+        Relationships: []
+      }
       prospect_statuses: {
         Row: {
           prospect_id: number
