@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
@@ -11,6 +11,7 @@ import {
   Search,
   Send,
   Sparkles,
+  UserPlus,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -70,6 +71,35 @@ const PRIORITY: Record<Priority, { label: string; className: string }> = {
 };
 
 const isWhats = (p: Prospect) => p.channel === "WhatsApp";
+
+type LeadRow = {
+  id: number;
+  name: string;
+  focus: string;
+  source: string;
+  channel: string;
+  phone: string;
+  email: string;
+  priority: string;
+  notes: string;
+};
+
+const defaultLeadMessage = (name: string) =>
+  `Olá, equipe ${name}! Sou o Evaldo, da MadePrimer, marcenaria de móveis planejados e sob medida. Trabalhamos em parceria com escritórios de arquitetura executando a marcenaria dos projetos com alto padrão de acabamento. Posso enviar nosso portfólio para vocês conhecerem nosso trabalho?`;
+
+const leadToProspect = (l: LeadRow): Prospect => ({
+  id: l.id,
+  priority: (l.priority as Priority) || "P2",
+  name: l.name,
+  focus: l.focus,
+  source: l.source,
+  phoneFormatted: l.phone || l.email,
+  phoneRaw: l.phone || l.email,
+  channel: l.channel,
+  status: "A Enviar",
+  message: defaultLeadMessage(l.name),
+  followUp: followUpTemplate,
+});
 const waUrl = (phone: string, msg: string) =>
   `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
 
@@ -86,6 +116,7 @@ function Index() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [statuses, setStatuses] = useState<Record<number, Status>>({});
+  const [dbProspects, setDbProspects] = useState<Prospect[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const [fPriority, setFPriority] = useState<"all" | Priority>("all");
