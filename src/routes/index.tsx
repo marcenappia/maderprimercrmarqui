@@ -34,7 +34,7 @@ const STATUSES: { value: Status; label: string; cls: string }[] = [
   { value: "Reunião Agendada", label: "📅 Reunião Agendada", cls: "bg-primary/10 text-accent-foreground border-primary/30" },
   { value: "Sem Interesse", label: "❌ Sem Interesse", cls: "bg-destructive/10 text-destructive border-destructive/30" },
 ];
-const PRIORITY: Record<string, { label: string; cls: string }> = {
+const PRIORITY: Record<"P1" | "P2" | "P3", { label: string; cls: string }> = {
   P1: { label: "PRIORIDADE 1", cls: "bg-destructive/10 text-destructive" },
   P2: { label: "PRIORIDADE 2", cls: "bg-primary/15 text-accent-foreground" },
   P3: { label: "PRIORIDADE 3", cls: "bg-chart-3/10 text-chart-3" },
@@ -64,7 +64,7 @@ function Index() {
   useEffect(() => {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}") as Record<number, Status>;
-      setProspects((ps) => ps.map((p) => (saved[p.id] ? { ...p, status: saved[p.id] } : p)));
+      setProspects((ps) => ps.map((p) => { const st = saved[p.id]; return st ? { ...p, status: st } : p; }));
     } catch { /* ignora dados corrompidos */ }
   }, []);
 
