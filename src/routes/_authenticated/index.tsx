@@ -168,11 +168,42 @@ function Index() {
       )
       .subscribe();
 
+    supabase
+      .from("prospects")
+      .select("*")
+      .order("created_at", { ascending: true })
+      .then(({ data, error }) => {
+        if (!active) return;
+        if (error) toast.error("Não foi possível carregar os leads cadastrados.");
+        setDbProspects(((data ?? []) as LeadRow[]).map(leadToProspect));
+      });
+
+    const leadsChannel = supabase
+      .channel("prospects_list_sync")
+      .on("postgres_changes", { event: "*", schema: "public", table: "prospects" }, (payload) => {
+        if (payload.eventType === "INSERT") {
+          setDbProspects((prev) => [...prev, leadToProspect(payload.new as LeadRow)]);
+        } else if (payload.eventType === "DELETE") {
+          const old = payload.old as { id?: number };
+          if (old.id != null) setDbProspects((prev) => prev.filter((p) => p.id !== old.id));
+        } else if (payload.eventType === "UPDATE") {
+          const row = leadToProspect(payload.new as LeadRow);
+          setDbProspects((prev) => prev.map((p) => (p.id === row.id ? row : p)));
+        }
+      })
+      .subscribe();
+
     return () => {
       active = false;
       supabase.removeChannel(channel);
+      supabase.removeChannel(leadsChannel);
     };
   }, []);
+
+  const allProspects = useMemo(
+    () => [...initialProspects, ...dbProspects],
+    [dbProspects],
+  );
 
   const statusOf = (id: number): Status => statuses[id] ?? "A Enviar";
 
@@ -202,19 +233,19 @@ function Index() {
   };
 
   const counts = useMemo(() => {
-    const total = initialProspects.length;
-    const sent = initialProspects.filter((p) => statusOf(p.id) === "Mensagem Enviada").length;
-    const pending = initialProspects.filter((p) => {
+    const total = allProspects.length;
+    const sent = allProspects.filter((p) => statusOf(p.id) === "Mensagem Enviada").length;
+    const pending = allProspects.filter((p) => {
       const s = statusOf(p.id);
       return s === "A Enviar" || s === "WhatsApp Aberto";
     }).length;
     return { total, sent, pending };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [statuses]);
+  }, [statuses, allProspects]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    return initialProspects.filter((p) => {
+    return allProspects.filter((p) => {
       if (fPriority !== "all" && p.priority !== fPriority) return false;
       if (fStatus !== "all" && statusOf(p.id) !== fStatus) return false;
       if (!q) return true;
@@ -225,7 +256,7 @@ function Index() {
       );
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, fPriority, fStatus, statuses]);
+  }, [search, fPriority, fStatus, statuses, allProspects]);
 
   const openModal = (p: Prospect) => {
     setModal(p);
@@ -250,6 +281,9 @@ function Index() {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <Button asChild variant="outline" size="sm" className="border-header-foreground/30 bg-transparent text-header-foreground hover:bg-header-foreground/10 hover:text-header-foreground">
+              <Link to="/leads"><UserPlus className="h-4 w-4" /> Leads</Link>
+            </Button>
             <Button variant="outline" size="sm" onClick={resetAll} className="border-header-foreground/30 bg-transparent text-header-foreground hover:bg-header-foreground/10 hover:text-header-foreground">
               <RotateCcw className="h-4 w-4" /> Zerar status
             </Button>
