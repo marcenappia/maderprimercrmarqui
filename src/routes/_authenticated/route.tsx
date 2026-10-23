@@ -1,26 +1,13 @@
-import { createFileRoute, redirect, Outlet } from "@tanstack/react-router";
-import { supabase } from "@/integrations/supabase/client";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-const AUTHORIZED_EMAIL = "madeprimermarketing@gmail.com";
-
+/**
+ * Temporary single-operator mode.
+ *
+ * Authentication is intentionally bypassed while the CRM's auth service is
+ * being repaired. Do not use this mode for a public or multi-user deployment.
+ * Restore the authenticated route guard before inviting other users.
+ */
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: async ({ location }) => {
-    if (typeof window === "undefined") return;
-    try {
-      const { data, error } = await supabase.auth.getUser();
-      if (error || !data.user) {
-        throw redirect({ to: "/auth", search: { redirect: location.href } });
-      }
-      if (data.user.email?.toLowerCase() !== AUTHORIZED_EMAIL) {
-        await supabase.auth.signOut();
-        throw redirect({ to: "/auth" });
-      }
-    } catch (error) {
-      if (typeof error === "object" && error !== null && "to" in error) throw error;
-      console.error("[Auth] Session check failed; sending user to login:", error);
-      throw redirect({ to: "/auth", search: { redirect: location.href } });
-    }
-  },
   component: () => <Outlet />,
 });
